@@ -1,6 +1,6 @@
 # Goa plugin Zerodriver
 
-The `ZdLogger` plugin is a [Goa v3](https://github.com/goadesign/goa/tree/v3) plugin
+The `zerodriver` plugin is a [Goa v3](https://github.com/goadesign/goa/tree/v3) plugin
 that adapt the basic logger to use the [zerodriver](https://github.com/hirosassa/zerodriver) library optimized for GCP Cloud Logging.
 
 ## Enabling the Plugin
@@ -13,7 +13,7 @@ package design
 
 import . "goa.design/goa/v3/http/design"
 import . "goa.design/goa/v3/http/dsl"
-import _ "github.com/hirosassa/zdlogger" // Enables the plugin
+import _ "github.com/hirosassa/goa-plugin-zerodriver" // Enables the plugin
 
 var _ = API("...
 
