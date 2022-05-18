@@ -2,9 +2,9 @@
 
 This repository contains plugins for [Goa v3](https://github.com/goadesign/goa/tree/v3).
 
-## Zerodriver
+## Zerologger
 
-The `Zerodriver` plugin is a [Goa v3](https://github.com/goadesign/goa/tree/v3) plugin
+The `Zerologger` plugin is a [Goa v3](https://github.com/goadesign/goa/tree/v3) plugin
 that adapt the basic logger to use the [zerodriver](https://github.com/hirosassa/zerodriver) library optimized for GCP Cloud Logging.
 
 ### Enabling the Plugin
@@ -17,7 +17,7 @@ package design
 
 import . "goa.design/goa/v3/http/design"
 import . "goa.design/goa/v3/http/dsl"
-import _ "github.com/hirosassa/goaplugin/zerodriver" // Enables the plugin
+import _ "github.com/hirosassa/goaplugin/zerologger" // Enables the plugin
 
 var _ = API("...
 

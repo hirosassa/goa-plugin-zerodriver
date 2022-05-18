@@ -151,7 +151,7 @@ func updateExampleFile(genpkg string, root *expr.RootExpr, f *fileToModify) {
 }
 
 const loggerT = `
-// Logger is an adapted zerosdlogger
+// Logger is an adapted zerodriver logger
 type Logger struct {
 	*zerodriver.Logger
 }
