@@ -1,6 +1,6 @@
-module github.com/hirosassa/zdlogger
+module github.com/hirosassa/goaplugin
 
-go 1.17
+go 1.18
 
 require goa.design/goa/v3 v3.7.1
 

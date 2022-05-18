@@ -1,9 +1,9 @@
-package zdlogger
+package zerologger
 
 import (
 	"testing"
 
-	"github.com/hirosassa/zdlogger/testdata"
+	"github.com/hirosassa/goaplugin/zerologger/testdata"
 
 	"goa.design/goa/v3/codegen"
 	"goa.design/goa/v3/codegen/generator"
