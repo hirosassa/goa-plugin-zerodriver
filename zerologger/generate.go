@@ -1,4 +1,4 @@
-package zdlogger
+package zerologger
 
 import (
 	"fmt"
@@ -20,8 +20,8 @@ type fileToModify struct {
 
 // Register the plugin Generator functions.
 func init() {
-	codegen.RegisterPluginFirst("zdlogger", "gen", nil, Generate)
-	codegen.RegisterPluginLast("zdlogger-updater", "example", nil, UpdateExample)
+	codegen.RegisterPluginFirst("zerologger", "gen", nil, Generate)
+	codegen.RegisterPluginLast("zerologger-updater", "example", nil, UpdateExample)
 }
 
 // Generate generates zerolog logger specific files.
@@ -101,7 +101,7 @@ func GenerateLoggerFile(genpkg string) *codegen.File {
 	}
 
 	sections = append(sections, &codegen.SectionTemplate{
-		Name:   "zdlogger",
+		Name:   "zerologger",
 		Source: loggerT,
 	})
 
@@ -151,7 +151,7 @@ func updateExampleFile(genpkg string, root *expr.RootExpr, f *fileToModify) {
 }
 
 const loggerT = `
-// Logger is an adapted zdlogger
+// Logger is an adapted zerosdlogger
 type Logger struct {
 	*zerodriver.Logger
 }
