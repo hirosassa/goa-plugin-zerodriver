@@ -76,7 +76,7 @@ func main() {
 			addr := "http://localhost:8000/calc"
 			u, err := url.Parse(addr)
 			if err != nil {
-				logger.Fatalf("invalid URL %#v: %s\n", addr, err)
+				logger.Fatal().Msgf("invalid URL %#v: %s\n", addr, err)
 			}
 			if *secureF {
 				u.Scheme = "https"
@@ -87,7 +87,7 @@ func main() {
 			if *httpPortF != "" {
 				h, _, err := net.SplitHostPort(u.Host)
 				if err != nil {
-					logger.Fatalf("invalid URL %#v: %s\n", u.Host, err)
+					logger.Fatal().Msgf("invalid URL %#v: %s\n", u.Host, err)
 				}
 				u.Host = net.JoinHostPort(h, *httpPortF)
 			} else if u.Port() == "" {
@@ -102,7 +102,7 @@ func main() {
 			addr = strings.Replace(addr, "{version}", *versionF, -1)
 			u, err := url.Parse(addr)
 			if err != nil {
-				logger.Fatalf("invalid URL %#v: %s\n", addr, err)
+				logger.Fatal().Msgf("invalid URL %#v: %s\n", addr, err)
 			}
 			if *secureF {
 				u.Scheme = "https"
@@ -113,7 +113,7 @@ func main() {
 			if *httpPortF != "" {
 				h, _, err := net.SplitHostPort(u.Host)
 				if err != nil {
-					logger.Fatalf("invalid URL %#v: %s\n", u.Host, err)
+					logger.Fatal().Msgf("invalid URL %#v: %s\n", u.Host, err)
 				}
 				u.Host = net.JoinHostPort(h, *httpPortF)
 			} else if u.Port() == "" {
@@ -123,7 +123,7 @@ func main() {
 		}
 
 	default:
-		logger.Fatalf("invalid host argument: %q (valid hosts: development|production)\n", *hostF)
+		logger.Fatal().Msgf("invalid host argument: %q (valid hosts: development|production)\n", *hostF)
 	}
 
 	// Wait for signal.

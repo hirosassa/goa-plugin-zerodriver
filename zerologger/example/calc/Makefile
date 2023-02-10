@@ -1,3 +1,4 @@
+.PHONY: gen example
 gen:
 	goa gen calc/design
 
