@@ -38,7 +38,6 @@ func Generate(genpkg string, roots []eval.Root, files []*codegen.File) ([]*codeg
 // the log import reference when needed
 // It also modify the initially generated main and service files
 func UpdateExample(genpkg string, roots []eval.Root, files []*codegen.File) ([]*codegen.File, error) {
-
 	filesToModify := []*fileToModify{}
 
 	for _, root := range roots {
@@ -92,7 +91,8 @@ func GenerateLoggerFile(genpkg string) *codegen.File {
 		codegen.Header(title, "log", []*codegen.ImportSpec{
 			{Path: "github.com/hirosassa/zerodriver"},
 			{Path: "github.com/rs/zerolog"},
-			{Path: "goa.design/goa/v3/http/middleware"},
+			{Path: "goa.design/goa/v3/http/middleware", Name: "httpmdlwr"},
+			{Path: "goa.design/goa/v3/middleware"},
 			{Path: "os"},
 			{Path: "fmt"},
 			{Path: "net/http"},
@@ -109,7 +109,6 @@ func GenerateLoggerFile(genpkg string) *codegen.File {
 }
 
 func updateExampleFile(genpkg string, root *expr.RootExpr, f *fileToModify) {
-
 	header := f.file.SectionTemplates[0]
 	logPath := path.Join(genpkg, "log")
 
@@ -131,21 +130,27 @@ func updateExampleFile(genpkg string, root *expr.RootExpr, f *fileToModify) {
 			s.Source = strings.Replace(s.Source, `logger = log.New(os.Stderr, "[{{ .APIPkg }}] ", log.Ltime)`,
 				`logger = log.New("{{ .APIPkg }}", false)`, 1)
 			s.Source = strings.Replace(s.Source, "adapter = middleware.NewLogger(logger)", "adapter = logger", 1)
+			s.Source = strings.Replace(s.Source, "handler = httpmdlwr.Log(adapter)(handler)", "handler = log.ZerodriverHttpMiddleware(adapter)(handler)", 1)
 			s.Source = strings.Replace(s.Source, "handler = httpmdlwr.RequestID()(handler)",
 				`handler = httpmdlwr.PopulateRequestContext()(handler)
-				handler = log.ZerodriverHttpMiddleware(logger)(handler)
 				handler = httpmdlwr.RequestID(httpmdlwr.UseXRequestIDHeaderOption(true))(handler)`, 1)
 			s.Source = strings.Replace(s.Source, `logger.Printf("[%s] ERROR: %s", id, err.Error())`,
 				`logger.Error().Str("id", id).Err(err).Send()`, 1)
 			s.Source = strings.Replace(s.Source, "logger.Print(", "logger.Info().Msg(", -1)
 			s.Source = strings.Replace(s.Source, "logger.Printf(", "logger.Info().Msgf(", -1)
 			s.Source = strings.Replace(s.Source, "logger.Println(", "logger.Info().Msg(", -1)
+			s.Source = strings.Replace(s.Source, "logger.Fatal(", "logger.Fatal().Msg(", -1)
+			s.Source = strings.Replace(s.Source, "logger.Fatalf(", "logger.Fatal().Msgf(", -1)
+			s.Source = strings.Replace(s.Source, "logger.Fatalln(", "logger.Fatal().Msg(", -1)
 		}
 	} else {
 		for _, s := range f.file.SectionTemplates {
 			s.Source = strings.Replace(s.Source, "logger.Print(", "logger.Info().Msg(", -1)
 			s.Source = strings.Replace(s.Source, "logger.Printf(", "logger.Info().Msgf(", -1)
 			s.Source = strings.Replace(s.Source, "logger.Println(", "logger.Info().Msg(", -1)
+			s.Source = strings.Replace(s.Source, "logger.Fatal(", "logger.Fatal().Msg(", -1)
+			s.Source = strings.Replace(s.Source, "logger.Fatalf(", "logger.Fatal().Msgf(", -1)
+			s.Source = strings.Replace(s.Source, "logger.Fatalln(", "logger.Fatal().Msg(", -1)
 		}
 	}
 }
@@ -186,12 +191,22 @@ func FormatFields(keyvals []interface{}) map[string]interface{} {
 }
 // ZerodriverHttpMiddleware extracts and formats http request and response information into
 // GCP Cloud Logging optimized format.
-func ZerodriverHttpMiddleware(logger *Logger) func(h http.Handler) http.Handler {
+// If logger is not *Logger, it returns goa default middleware.
+func ZerodriverHttpMiddleware(logger middleware.Logger) func(h http.Handler) http.Handler {
+	switch logr := logger.(type) {
+	case *Logger:
+		return zerodriverHttpMiddleware(logr)
+	default:
+		return httpmdlwr.Log(logger)
+	}
+}
+
+func zerodriverHttpMiddleware(logger *Logger) func(h http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			rw := middleware.CaptureResponse(w)
+			rw := httpmdlwr.CaptureResponse(w)
 			h.ServeHTTP(rw, r)
 
 			var res http.Response
