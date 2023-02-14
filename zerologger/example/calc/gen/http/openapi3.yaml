@@ -49,6 +49,15 @@ paths:
                                 example: 8399553735696626949
                                 format: int64
                             example: 5401762099778430809
+    /healthz:
+        get:
+            tags:
+                - calc
+            summary: healthz calc
+            operationId: calc#healthz
+            responses:
+                "204":
+                    description: No Content response.
     /swagger.json:
         get:
             tags:

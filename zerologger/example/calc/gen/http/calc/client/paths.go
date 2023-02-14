@@ -15,3 +15,8 @@ import (
 func AddCalcPath(a int, b int) string {
 	return fmt.Sprintf("/add/%v/%v", a, b)
 }
+
+// HealthzCalcPath returns the URL path to the calc service healthz HTTP endpoint.
+func HealthzCalcPath() string {
+	return "/healthz"
+}

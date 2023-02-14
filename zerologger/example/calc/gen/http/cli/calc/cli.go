@@ -22,7 +22,7 @@ import (
 //
 //	command (subcommand1|subcommand2|...)
 func UsageCommands() string {
-	return `calc add
+	return `calc (add|healthz)
 `
 }
 
@@ -47,9 +47,12 @@ func ParseEndpoint(
 		calcAddFlags = flag.NewFlagSet("add", flag.ExitOnError)
 		calcAddAFlag = calcAddFlags.String("a", "REQUIRED", "Left operand")
 		calcAddBFlag = calcAddFlags.String("b", "REQUIRED", "Right operand")
+
+		calcHealthzFlags = flag.NewFlagSet("healthz", flag.ExitOnError)
 	)
 	calcFlags.Usage = calcUsage
 	calcAddFlags.Usage = calcAddUsage
+	calcHealthzFlags.Usage = calcHealthzUsage
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		return nil, nil, err
@@ -88,6 +91,9 @@ func ParseEndpoint(
 			case "add":
 				epf = calcAddFlags
 
+			case "healthz":
+				epf = calcHealthzFlags
+
 			}
 
 		}
@@ -116,6 +122,9 @@ func ParseEndpoint(
 			case "add":
 				endpoint = c.Add()
 				data, err = calcc.BuildAddPayload(*calcAddAFlag, *calcAddBFlag)
+			case "healthz":
+				endpoint = c.Healthz()
+				data = nil
 			}
 		}
 	}
@@ -134,6 +143,7 @@ Usage:
 
 COMMAND:
     add: Add implements add.
+    healthz: Healthz implements healthz.
 
 Additional help:
     %[1]s calc COMMAND --help
@@ -148,5 +158,15 @@ Add implements add.
 
 Example:
     %[1]s calc add --a 5952269320165453119 --b 1828520165265779840
+`, os.Args[0])
+}
+
+func calcHealthzUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] calc healthz
+
+Healthz implements healthz.
+
+Example:
+    %[1]s calc healthz
 `, os.Args[0])
 }

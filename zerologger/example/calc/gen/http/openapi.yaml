@@ -38,6 +38,17 @@ paths:
                         format: int64
             schemes:
                 - http
+    /healthz:
+        get:
+            tags:
+                - calc
+            summary: healthz calc
+            operationId: calc#healthz
+            responses:
+                "204":
+                    description: No Content response.
+            schemes:
+                - http
     /swagger.json:
         get:
             tags:

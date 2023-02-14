@@ -68,7 +68,7 @@ func handleHTTPServer(ctx context.Context, u *url.URL, calcEndpoints *calc.Endpo
 	// here apply to all the service endpoints.
 	var handler http.Handler = mux
 	{
-		handler = log.ZerodriverHttpMiddleware(adapter)(handler)
+		handler = log.ZerodriverHttpMiddleware(adapter, []string{"/healthz"})(handler)
 		handler = httpmdlwr.PopulateRequestContext()(handler)
 		handler = httpmdlwr.RequestID(httpmdlwr.UseXRequestIDHeaderOption(true))(handler)
 	}

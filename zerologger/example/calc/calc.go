@@ -22,3 +22,9 @@ func (s *calcsrvc) Add(ctx context.Context, p *calc.AddPayload) (res int, err er
 	s.logger.Info().Msg("calc.add")
 	return
 }
+
+// Healthz implements healthz.
+func (s *calcsrvc) Healthz(ctx context.Context) (err error) {
+	s.logger.Info().Msg("calc.healthz")
+	return
+}

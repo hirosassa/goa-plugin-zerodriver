@@ -4,4 +4,5 @@ gen:
 
 example:
 	rm -rf cmd
+	rm calc.go
 	goa example calc/design
