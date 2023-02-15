@@ -58,16 +58,17 @@ func FormatFields(keyvals []interface{}) map[string]interface{} {
 // ZerodriverHttpMiddleware extracts and formats http request and response information into
 // GCP Cloud Logging optimized format.
 // If logger is not *Logger, it returns goa default middleware.
-func ZerodriverHttpMiddleware(logger middleware.Logger) func(h http.Handler) http.Handler {
+// healthCheckPaths is used to skip log when the request is correct.
+func ZerodriverHttpMiddleware(logger middleware.Logger, healthCheckPaths []string) func(h http.Handler) http.Handler {
 	switch logr := logger.(type) {
 	case *Logger:
-		return zerodriverHttpMiddleware(logr)
+		return zerodriverHttpMiddleware(logr, healthCheckPaths)
 	default:
 		return httpmdlwr.Log(logger)
 	}
 }
 
-func zerodriverHttpMiddleware(logger *Logger) func(h http.Handler) http.Handler {
+func zerodriverHttpMiddleware(logger *Logger, healthCheckPaths []string) func(h http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
@@ -92,9 +93,22 @@ func zerodriverHttpMiddleware(logger *Logger) func(h http.Handler) http.Handler 
 				level = zerolog.ErrorLevel
 			}
 
+			if isHealthCheckPath(r.URL.Path, healthCheckPaths) && rw.StatusCode < 400 {
+				return
+			}
+
 			logger.WithLevel(level).
 				HTTP(p).
 				Msg("request finished")
 		})
 	}
+}
+
+func isHealthCheckPath(path string, healthCheckPaths []string) bool {
+	for _, hp := range healthCheckPaths {
+		if path == hp {
+			return true
+		}
+	}
+	return false
 }

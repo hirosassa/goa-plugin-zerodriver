@@ -1,7 +1,7 @@
 package design
 
 import (
-	_ "github.com/hirosassa/goaplugin/zerologger"
+	zerologger "github.com/hirosassa/goaplugin/zerologger/dsl"
 	. "goa.design/goa/v3/dsl"
 )
 
@@ -46,6 +46,7 @@ var _ = API("calc", func() {
 
 // Service describes a service
 var _ = Service("calc", func() {
+	zerologger.HealthCheckPaths("/healthz")
 	Description("The calc service performs operations on numbers")
 
 	// Method describes a service method (endpoint)
@@ -71,6 +72,12 @@ var _ = Service("calc", func() {
 			// Responses use a "200 OK" HTTP status.
 			// The result is encoded in the response body.
 			Response(StatusOK)
+		})
+	})
+
+	Method("healthz", func() {
+		HTTP(func() {
+			GET("/healthz")
 		})
 	})
 

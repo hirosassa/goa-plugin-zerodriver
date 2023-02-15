@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	zeroexpr "github.com/hirosassa/goaplugin/zerologger/expr"
 	"goa.design/goa/v3/codegen"
 	"goa.design/goa/v3/eval"
 	"goa.design/goa/v3/expr"
@@ -125,12 +126,13 @@ func updateExampleFile(genpkg string, root *expr.RootExpr, f *fileToModify) {
 	if f.isMain {
 
 		codegen.AddImport(header, &codegen.ImportSpec{Path: "github.com/hirosassa/zerodriver"})
+		healthPaths := buildHealthCheckPaths()
 
 		for _, s := range f.file.SectionTemplates {
 			s.Source = strings.Replace(s.Source, `logger = log.New(os.Stderr, "[{{ .APIPkg }}] ", log.Ltime)`,
 				`logger = log.New("{{ .APIPkg }}", false)`, 1)
 			s.Source = strings.Replace(s.Source, "adapter = middleware.NewLogger(logger)", "adapter = logger", 1)
-			s.Source = strings.Replace(s.Source, "handler = httpmdlwr.Log(adapter)(handler)", "handler = log.ZerodriverHttpMiddleware(adapter)(handler)", 1)
+			s.Source = strings.Replace(s.Source, "handler = httpmdlwr.Log(adapter)(handler)", fmt.Sprintf("handler = log.ZerodriverHttpMiddleware(adapter, []string{%s})(handler)", strings.Join(healthPaths, ", ")), 1)
 			s.Source = strings.Replace(s.Source, "handler = httpmdlwr.RequestID()(handler)",
 				`handler = httpmdlwr.PopulateRequestContext()(handler)
 				handler = httpmdlwr.RequestID(httpmdlwr.UseXRequestIDHeaderOption(true))(handler)`, 1)
@@ -153,6 +155,18 @@ func updateExampleFile(genpkg string, root *expr.RootExpr, f *fileToModify) {
 			s.Source = strings.Replace(s.Source, "logger.Fatalln(", "logger.Fatal().Msg(", -1)
 		}
 	}
+}
+
+func buildHealthCheckPaths() []string {
+	result := make([]string, 0)
+	for _, hc := range zeroexpr.Root.HealthChecks {
+		result = append(result, hc.Paths...)
+	}
+
+	for i, r := range result {
+		result[i] = fmt.Sprintf(`"%s"`, r)
+	}
+	return result
 }
 
 const loggerT = `
@@ -192,16 +206,17 @@ func FormatFields(keyvals []interface{}) map[string]interface{} {
 // ZerodriverHttpMiddleware extracts and formats http request and response information into
 // GCP Cloud Logging optimized format.
 // If logger is not *Logger, it returns goa default middleware.
-func ZerodriverHttpMiddleware(logger middleware.Logger) func(h http.Handler) http.Handler {
+// healthCheckPaths is used to skip log when the request is correct.
+func ZerodriverHttpMiddleware(logger middleware.Logger, healthCheckPaths []string) func(h http.Handler) http.Handler {
 	switch logr := logger.(type) {
 	case *Logger:
-		return zerodriverHttpMiddleware(logr)
+		return zerodriverHttpMiddleware(logr, healthCheckPaths)
 	default:
 		return httpmdlwr.Log(logger)
 	}
 }
 
-func zerodriverHttpMiddleware(logger *Logger) func(h http.Handler) http.Handler {
+func zerodriverHttpMiddleware(logger *Logger, healthCheckPaths []string) func(h http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
@@ -226,10 +241,23 @@ func zerodriverHttpMiddleware(logger *Logger) func(h http.Handler) http.Handler 
 				level = zerolog.ErrorLevel
 			}
 
+			if isHealthCheckPath(r.URL.Path, healthCheckPaths) && rw.StatusCode < 400 {
+				return
+			}
+
 			logger.WithLevel(level).
 				HTTP(p).
 				Msg("request finished")
 		})
 	}
+}
+
+func isHealthCheckPath(path string, healthCheckPaths []string) bool {
+	for _, hp := range healthCheckPaths {
+		if path == hp {
+			return true
+		}
+	}
+	return false
 }
 `

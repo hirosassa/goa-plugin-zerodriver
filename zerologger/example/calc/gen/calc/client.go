@@ -15,13 +15,15 @@ import (
 
 // Client is the "calc" service client.
 type Client struct {
-	AddEndpoint goa.Endpoint
+	AddEndpoint     goa.Endpoint
+	HealthzEndpoint goa.Endpoint
 }
 
 // NewClient initializes a "calc" service client given the endpoints.
-func NewClient(add goa.Endpoint) *Client {
+func NewClient(add, healthz goa.Endpoint) *Client {
 	return &Client{
-		AddEndpoint: add,
+		AddEndpoint:     add,
+		HealthzEndpoint: healthz,
 	}
 }
 
@@ -33,4 +35,10 @@ func (c *Client) Add(ctx context.Context, p *AddPayload) (res int, err error) {
 		return
 	}
 	return ires.(int), nil
+}
+
+// Healthz calls the "healthz" endpoint of the "calc" service.
+func (c *Client) Healthz(ctx context.Context) (err error) {
+	_, err = c.HealthzEndpoint(ctx, nil)
+	return
 }

@@ -1,8 +1,9 @@
-package zerologger
+package zerologger_test
 
 import (
 	"testing"
 
+	"github.com/hirosassa/goaplugin/zerologger"
 	"github.com/hirosassa/goaplugin/zerologger/testdata"
 
 	"goa.design/goa/v3/codegen"
@@ -13,13 +14,11 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-
 	httpcodegen.RunHTTPDSL(t, testdata.SimpleServiceDSL)
 
 	roots := []eval.Root{expr.Root}
 	files := generateFiles(t, roots)
-	newFiles, err := Generate("", roots, files)
-
+	newFiles, err := zerologger.Generate("", roots, files)
 	if err != nil {
 		t.Fatalf("generate error: %v", err)
 	}
@@ -31,7 +30,6 @@ func TestGenerate(t *testing.T) {
 }
 
 func generateFiles(t *testing.T, roots []eval.Root) []*codegen.File {
-
 	files, err := generator.Service("", roots)
 	if err != nil {
 		t.Fatalf("error in code generation: %v", err)
